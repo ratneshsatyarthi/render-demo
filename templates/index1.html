@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bank Fraud Detection</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f7f9fc;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+    .container {
+      background: white;
+      padding: 30px 40px;
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+      width: 400px;
+    }
+    h1 {
+      margin-bottom: 20px;
+      color: #0077cc;
+      text-align: center;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      margin-bottom: 6px;
+      font-weight: 600;
+      color: #333333;
+    }
+    input[type="text"],
+    input[type="number"],
+    input[type="datetime-local"] {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #cccccc;
+      border-radius: 6px;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+    input[type="submit"] {
+      margin-top: 25px;
+      width: 100%;
+      padding: 12px;
+      background-color: #0077cc;
+      color: white;
+      font-size: 1.1rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.25s ease;
+    }
+    input[type="submit"]:hover {
+      background-color: #005fa3;
+    }
+    .result {
+      margin-top: 25px;
+      padding: 15px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 1.2rem;
+      text-align: center;
+    }
+    .fraud {
+      background-color: #ffdddd;
+      color: #b30000;
+      border: 1px solid #b30000;
+    }
+    .non-fraud {
+      background-color: #ddffdd;
+      color: #097700;
+      border: 1px solid #097700;
+    }
+    footer {
+      margin-top: 40px;
+      text-align: center;
+      font-size: 0.9rem;
+      color: #666666;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Bank Fraud Detection</h1>
+    <form id="transactionForm">
+      <label for="amount">Transaction Amount ($)</label>
+      <input type="number" id="amount" name="amount" step="0.01" min="0" required />
+
+      <label for="transactionDate">Transaction Date & Time</label>
+      <input type="datetime-local" id="transactionDate" name="transactionDate" required />
+
+      <label for="location">Location</label>
+      <input type="text" id="location" name="location" placeholder="e.g. Los Angeles" required />
+
+      <label for="ip">IP Address</label>
+      <input type="text" id="ip" name="ip" placeholder="e.g. 192.168.1.25" required />
+
+      <label for="merchant">Merchant ID</label>
+      <input type="text" id="merchant" name="merchant" placeholder="e.g. M050" required />
+
+      <label for="prevTransactionDate">Previous Transaction Date & Time</label>
+      <input type="datetime-local" id="prevTransactionDate" name="prevTransactionDate" required />
+
+      <input type="submit" value="Check for Fraud" />
+    </form>
+    <div id="result" class="result" style="display:none;"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById('transactionForm');
+    const resultDiv = document.getElementById('result');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      // Collect form data
+      const data = {
+        TransactionAmount: parseFloat(form.amount.value),
+        TransactionDate: new Date(form.transactionDate.value).toISOString(),
+        Location: form.location.value.trim(),
+        ip: form.ip.value.trim(),
+        MerchantID: form.merchant.value.trim(),
+        PreviousTransactionDate: new Date(form.prevTransactionDate.value).toISOString()
+      };
+
+      resultDiv.style.display = 'none';
+      resultDiv.textContent = '';
+
+      try {
+        // Call Flask API endpoint (adjust URL if needed)
+        const response = await fetch('/predict', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            TransactionAmount: data.TransactionAmount,
+            TransactionDate: data.TransactionDate,
+            Location: data.Location,
+            ip: data.ip,
+            MerchantID: data.MerchantID,
+            PreviousTransactionDate: data.PreviousTransactionDate
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('API Error: ' + response.statusText);
+        }
+
+        const resultJson = await response.json();
+
+        // Show result with styling
+        if (resultJson.prediction.toLowerCase().includes('fraud')) {
+          resultDiv.className = 'result fraud';
+          resultDiv.textContent = '⚠️ Warning: Fraudulent Transaction Detected!';
+        } else {
+          resultDiv.className = 'result non-fraud';
+          resultDiv.textContent = '✔️ This Transaction Seems Legitimate';
+        }
+        resultDiv.style.display = 'block';
+
+      } catch (error) {
+        resultDiv.className = 'result fraud';
+        resultDiv.textContent = 'Error: ' + error.message;
+        resultDiv.style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>
