@@ -29,8 +29,8 @@ def preprocess(input_data: pd.DataFrame, le_dict):
     input_data["PreviousTransactionDate"] = pd.to_datetime(input_data["PreviousTransactionDate"])
     
     # Rename IP_Address column if present
-    if "IP_Address" in input_data.columns:
-        input_data = input_data.rename(columns={"IP_Address": "IP Address"})
+    #if "IP_Address" in input_data.columns:
+    #    input_data = input_data.rename(columns={"IP_Address": "IP Address"})
         
     # Encode categorical variables with pre-fitted label encoders
     for col, le in le_dict.items():
