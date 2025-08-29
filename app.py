@@ -4,16 +4,22 @@ import numpy as np
 import pandas as pd
 import joblib
 from datetime import datetime
+from flask_cors import CORS
+import logging
 
 # Initialize the Flask application
 app = Flask(__name__)
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
 
 # Load model and label encoders once at app startup
 try:
     model = joblib.load("rf_smote_model.pkl")
     le_dict = joblib.load("label_encoders.pkl")
 except FileNotFoundError:
-    print("Error: Model or label encoders file not found. Ensure 'rf_smote_model.pkl' and 'label_encoders.pkl' are in the same directory.")
+    logging.error("Model or label encoders file not found. Ensure 'rf_smote_model.pkl' and 'label_encoders.pkl' are in the same directory.")
+    #print("Error: Model or label encoders file not found. Ensure 'rf_smote_model.pkl' and 'label_encoders.pkl' are in the same directory.")
     # Exit or handle the error gracefully
     exit()
 
@@ -71,7 +77,9 @@ def predict():
 
     except Exception as e:
         # Return a JSON error response
-        return jsonify({"error": str(e)}), 400
+        logging.exception("Prediction error:")  # Log the full stack trace
+        return jsonify({"error": str(e)}), 500  # Return 500 for server errors
+        #return jsonify({"error": str(e)}), 400
 
 if __name__ == "__main__":
     app.run(debug=True)
